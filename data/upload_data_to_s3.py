@@ -2,7 +2,7 @@ import boto3
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path="../.env")
 
 # Creating Session With Boto3.
 session = boto3.Session(aws_access_key_id=os.getenv("ACCESS_KEY"),
@@ -20,6 +20,6 @@ for file in os.listdir(file_path):
 
         try:
             s3.Bucket(bucket_name).upload_file(local_file, s3_file_key)
-            print(f"File: {file} upload succesfully!")
+            print(f"File: {file} uploaded succesfully!")
         except Exception as e:
             print(f"Expcetion occured!: {e}")
