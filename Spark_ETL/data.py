@@ -8,7 +8,6 @@ class DatasetLoader:
              header=True,
              infer_schema=True,
              compression_name=None):
-        print(f"\n\n\nczytamy\n\n\n")
         if compression_name:
             df = spark.read.format(format) \
                         .option("header", header) \
@@ -20,5 +19,4 @@ class DatasetLoader:
                         .option("header", header) \
                         .option("inferSchema", infer_schema) \
                         .load(path)
-        print(f"\n\n\nKonczymy czytac\n\n\n\n")
         return df

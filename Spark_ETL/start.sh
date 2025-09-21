@@ -19,4 +19,4 @@ fi
 
 # Run Spark with local jars
 echo "Starting Spark application..."
-spark-submit --jars ./hadoop-aws-${HADOOP_AWS_VERSION}.jar,./aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar main.py
+time spark-submit --jars ./hadoop-aws-${HADOOP_AWS_VERSION}.jar,./aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar main.py

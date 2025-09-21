@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import os
 from dotenv import load_dotenv
 from data import DatasetLoader
-from transformations import add_country, longitude_latitude_transformation, geohash_transformation
+from transformations import add_country, longitude_latitude_transformation, geohash_transformation_from_lat_lon
 
 class ETL:
 
@@ -24,16 +24,19 @@ class ETL:
                                                path=f"s3a://{self.bucket_name}/{self.weather_filename}")
         self.public_traffic_data = DatasetLoader.read(spark=self.spark,
                                                       path=f"s3a://{self.bucket_name}/{self.public_traffic_filename}")
-        self.weather_data.show()
 
     def transform(self):
-        pass
+        self.weather_data = add_country(self.weather_data)
+        self.weather_data = longitude_latitude_transformation(self.weather_data)
+        self.public_traffic_filename = geohash_transformation_from_lat_lon(self.public_traffic_data)
 
     def load(self):
         pass
 
     def __call__(self):
         self.extract()
+        self.transform()
+        self.load()
 
 
 if __name__ == "__main__":

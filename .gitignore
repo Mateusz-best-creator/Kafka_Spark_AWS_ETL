@@ -1,3 +1,4 @@
 *.env
 *.jar
 *.csv
+*/__pycache__
