@@ -13,6 +13,12 @@ for file in os.listdir(input_folder):
         print(f"New parquet file = {new_name}")
         df.to_parquet(os.path.join(output_folder, new_name), engine='pyarrow', index=False)
 
+path = os.path.join(output_folder, "dane_ankiet.parquet")
+
+# Modify dane_ankiet to contain latitude and longitude values
+def modify_questionaire_data(path=path):
+    pass
+
 # Check if we can read parquet file
-df = pd.read_parquet(os.path.join(output_folder, "dane_ankiet.parquet"))
+df = modify_questionaire_data()
 print(df)

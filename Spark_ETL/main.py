@@ -1,23 +1,48 @@
 from pyspark.sql import SparkSession
 import os
 from dotenv import load_dotenv
+from data import Dataset
+from transformations import longitude_latitude_transformation, geohash_transformation
 
 class ETL:
 
-    def __init__(self, spark, bucket_name, questionaire_filename):
+    def __init__(self, 
+                 spark, 
+                 bucket_name, 
+                 questionaire_filename,
+                 location_filename,
+                 interests_filename):
+        
         self.spark = spark
         self.bucket_name = bucket_name
+
         self.questionaire_filename = questionaire_filename
+        self.location_filename = location_filename
+        self.interests_filename = interests_filename
+        
         self.questionaire_data = None
+        self.location_data = None
+        self.interests_data = None
 
     def extract(self):
-        # Read Parquet from S3
-        self.questionaire_data = self.spark.read.parquet(
-            f"s3a://{self.bucket_name}/{self.questionaire_filename}"
-        )
+
+        self.questionaire_data = Dataset.read(spark=self.spark,
+                                              path=f"s3a://{self.bucket_name}/{self.questionaire_filename}")
+        self.location_data = Dataset.read(spark=self.spark,
+                                              path=f"s3a://{self.bucket_name}/{self.location_filename}")
+        self.interests_data = Dataset.read(spark=self.spark,
+                                              path=f"s3a://{self.bucket_name}/{self.interests_filename}")
         self.questionaire_data.show()
 
-    def process(self):
+    def transform(self):
+        self.questionaire_data = longitude_latitude_transformation()
+        self.questionaire_data = geohash_transformation()
+        
+
+    def load(self):
+        pass
+
+    def __call__(self):
         self.extract()
 
 
@@ -43,7 +68,9 @@ if __name__ == "__main__":
 
     etl_job = ETL(spark=spark,
                   bucket_name=BUCKET_NAME,
-                  questionaire_filename="dane_ankiet.parquet")
-    etl_job.process()
+                  questionaire_filename="dane_ankiet.parquet",
+                  location_filename="lok.parquet",
+                  interests_filename="zain.parquet")
+    etl_job()
 
     spark.stop()
