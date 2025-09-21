@@ -1,0 +1,5 @@
+1. augment dataset to add longitude and latitude
+2. complete transformations function to fill missing values
+3. define api class to make an api call
+4. define function to encode lat,lot
+5. write unit tests

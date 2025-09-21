@@ -1,5 +1,5 @@
 
-class Dataset:
+class DatasetLoader:
 
     @staticmethod
     def read(spark,

@@ -22,4 +22,4 @@ for file in os.listdir(file_path):
             s3.Bucket(bucket_name).upload_file(local_file, s3_file_key)
             print(f"File: {file} uploaded succesfully!")
         except Exception as e:
-            print(f"Expcetion occured!: {e}")
+            print(f"Exception occured!: {e}")

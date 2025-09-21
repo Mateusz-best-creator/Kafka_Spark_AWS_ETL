@@ -1,43 +1,33 @@
 from pyspark.sql import SparkSession
 import os
 from dotenv import load_dotenv
-from data import Dataset
-from transformations import longitude_latitude_transformation, geohash_transformation
+from data import DatasetLoader
+from transformations import add_country, longitude_latitude_transformation, geohash_transformation
 
 class ETL:
 
     def __init__(self, 
                  spark, 
-                 bucket_name, 
-                 questionaire_filename,
-                 location_filename,
-                 interests_filename):
-        
+                 bucket_name,
+                 weather_filename,
+                 public_traffic_filename):
+                
         self.spark = spark
         self.bucket_name = bucket_name
 
-        self.questionaire_filename = questionaire_filename
-        self.location_filename = location_filename
-        self.interests_filename = interests_filename
+        self.weather_filename = weather_filename
+        self.public_traffic_filename = public_traffic_filename
         
-        self.questionaire_data = None
-        self.location_data = None
-        self.interests_data = None
-
     def extract(self):
 
-        self.questionaire_data = Dataset.read(spark=self.spark,
-                                              path=f"s3a://{self.bucket_name}/{self.questionaire_filename}")
-        self.location_data = Dataset.read(spark=self.spark,
-                                              path=f"s3a://{self.bucket_name}/{self.location_filename}")
-        self.interests_data = Dataset.read(spark=self.spark,
-                                              path=f"s3a://{self.bucket_name}/{self.interests_filename}")
-        self.questionaire_data.show()
+        self.weather_data = DatasetLoader.read(spark=self.spark,
+                                               path=f"s3a://{self.bucket_name}/{self.weather_filename}")
+        self.public_traffic_data = DatasetLoader.read(spark=self.spark,
+                                                      path=f"s3a://{self.bucket_name}/{self.public_traffic_filename}")
+        self.weather_data.show()
 
     def transform(self):
-        self.questionaire_data = longitude_latitude_transformation()
-        self.questionaire_data = geohash_transformation()
-        
+        pass
 
     def load(self):
         pass
@@ -68,9 +58,8 @@ if __name__ == "__main__":
 
     etl_job = ETL(spark=spark,
                   bucket_name=BUCKET_NAME,
-                  questionaire_filename="dane_ankiet.parquet",
-                  location_filename="lok.parquet",
-                  interests_filename="zain.parquet")
+                  weather_filename="weather_data.parquet",
+                  public_traffic_filename="iot_edge_computing_public_management.parquet")
     etl_job()
 
     spark.stop()
