@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 import os
 from pyspark.sql.types import StructField, StructType, DoubleType, StringType
 
+def remove_unused_columns(df,
+                          columns_to_drop):
+    return df.drop(*columns_to_drop)
+
 def add_country(df,
                 country_column_name="Country",
                 column_value="USA"):
@@ -48,9 +52,7 @@ def longitude_latitude_transformation(df):
            .withColumn("Longitude", F.col(f"{combined_column_name}.Longitude")) \
            .withColumn("GeoHash", F.col(f"{combined_column_name}.GeoHash")) \
            .drop(F.col(combined_column_name))
-
-    print("\n\nAfter lat, lon transformations:\n\n")
-    df.show()
+    return df
 
 def get_geohash(geocoder,
                 latitude,
@@ -74,9 +76,14 @@ def geohash_transformation_from_lat_lon(df):
     key = os.getenv("GEOCODE_KEY")
     geocoder = OpenCageGeocode(key)
     geohash_udf = get_geohash_func(geocoder)
-
     df = df.withColumn("GeoHash", geohash_udf(F.col("latitude"), F.col("longitude")))
-    print("\n\nAfter adding Geohash column:\n\n")
-    df.show()
 
     return df
+
+def joining_datasets(weather_df, 
+                     traffic_df,
+                     key_for_join="GeoHash",
+                     join_type="left"):
+    return traffic_df.join(other=weather_df,
+                           on=key_for_join, 
+                           how=join_type)

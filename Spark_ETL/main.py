@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import os
 from dotenv import load_dotenv
 from data import DatasetLoader
-from transformations import add_country, longitude_latitude_transformation, geohash_transformation_from_lat_lon
+from transformations import add_country, longitude_latitude_transformation, geohash_transformation_from_lat_lon, joining_datasets, remove_unused_columns
 
 class ETL:
 
@@ -17,6 +17,10 @@ class ETL:
 
         self.weather_filename = weather_filename
         self.public_traffic_filename = public_traffic_filename
+
+        self.weather_data = None
+        self.public_traffic_data = None
+        self.joined_data = None
         
     def extract(self):
 
@@ -26,9 +30,21 @@ class ETL:
                                                       path=f"s3a://{self.bucket_name}/{self.public_traffic_filename}")
 
     def transform(self):
+
         self.weather_data = add_country(self.weather_data)
         self.weather_data = longitude_latitude_transformation(self.weather_data)
-        self.public_traffic_filename = geohash_transformation_from_lat_lon(self.public_traffic_data)
+        self.public_traffic_data = geohash_transformation_from_lat_lon(self.public_traffic_data)
+        self.public_traffic_data = remove_unused_columns(self.public_traffic_data, columns_to_drop=["sensor_id", 
+                                                                                                    "latitude", 
+                                                                                                    "longitude", 
+                                                                                                    "accident_hotspot"])
+        self.joined_data = joining_datasets(self.weather_data, self.public_traffic_data)
+
+        print(f"\n\nDatasets after transformations:\n\n")
+        self.weather_data.show(10)
+        self.public_traffic_data.show(10)
+        print(f"\n\nJoined dataset after transformations:\n\n")
+        self.joined_data.show(10)
 
     def load(self):
         pass
