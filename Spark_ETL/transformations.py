@@ -17,13 +17,13 @@ def add_country(df,
     return df.withColumn(country_column_name, F.lit(column_value))
 
 def geocode_udf_func(geocoder,
-                country_column,
-                city_column,
-                geohash_precision=4):
+                     country_column,
+                     city_column,
+                     geohash_precision=4):
     """
     
     """
-    if country_column is None and city_column is None:
+    if country_column is None or city_column is None:
         return (None, None, None)
     query = f'{city_column}, {country_column}'
     query_result = geocoder.geocode(query)[0]

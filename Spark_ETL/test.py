@@ -1,14 +1,14 @@
 import unittest
 from pyspark.sql import SparkSession
 from pyspark.testing.utils import assertDataFrameEqual, assertSchemaEqual # type: ignore
-from transformations import remove_unused_columns, add_country
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
+from transformations import remove_unused_columns, add_country, longitude_latitude_transformation
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, IntegralType
 import random
 
 class PySparkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.spark = SparkSession.builder.appName("Testing PySpark Example").getOrCreate()
+        cls.spark = SparkSession.builder.appName("Testing PySpark ETL appication").getOrCreate()
         cls.spark.sparkContext.setLogLevel("ERROR") # Make less logs in the console
 
     @classmethod
@@ -52,8 +52,24 @@ class TestTranformation(PySparkTestCase):
         self.assertEqual(o_df.schema, e_df.schema)
         self.assertEqual(sorted(o_df.collect()), sorted(e_df.collect()))
 
-    def test_geocode_udf_func(self):
-        pass
+    def test_longitude_latitude_transformation(self):
+        original_schema = StructType([StructField("Country", StringType(), True),
+                                      StructField("Location", StringType(), True)])
+        original_data = [("France", "Paris"),
+                         ("Chicago", "USA")]
+        o_df = longitude_latitude_transformation(self.spark.createDataFrame(original_data, original_schema))
+
+        expected_schema = StructType([StructField("Country", StringType(), True),
+                                      StructField("Location", StringType(), True),
+                                      StructField("Latitude", DoubleType(), True),
+                                      StructField("Longitude", DoubleType(), True),
+                                      StructField("GeoHash", StringType(), True)])
+        expected_data = [("France", "Paris"),
+                         ("Chicago", "USA")]
+        e_df = self.spark.createDataFrame(expected_data)
+        o_df.show()
+        e_df.show()
+
 
 
 if __name__ == "__main__":
