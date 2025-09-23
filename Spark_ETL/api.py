@@ -2,6 +2,8 @@ from opencage.geocoder import OpenCageGeocode
 from dotenv import load_dotenv
 import os
 from typing import Tuple
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StructField, StructType, DoubleType, StringType
 
 class GeocoderAPI:
     """
@@ -43,6 +45,12 @@ class GeocoderAPI:
 
         return lat, lon, geohash
     
+    def udf_get_lat_lon_hash(self):
+        return udf(lambda city, country: 
+                   self.get_latitude_longitude_geohash_from_country_city(country, city), StructType([StructField("Latitude", DoubleType(), True),
+                                                                                                      StructField("Longitude", DoubleType(), True),
+                                                                                                      StructField("GeoHash", StringType(), True)]))
+    
     def get_geohash_from_latitude_longitude(self,
                                             latitude: float,
                                             longitude: float) -> str | None:
@@ -57,6 +65,9 @@ class GeocoderAPI:
         """
         if latitude is None or longitude is None:
             return None
-        query_result = self.geocoder.reverse_geocode(latitude, longitude)
+        query_result = self.geocoder.reverse_geocode(latitude, longitude)[0]
         return query_result["annotations"]["geohash"][:self.geohash_precision]
     
+
+    def udf_get_hash_from_lat_lon(self):
+        return udf(lambda lat, lng: self.get_geohash_from_latitude_longitude(lat, lng), StringType())

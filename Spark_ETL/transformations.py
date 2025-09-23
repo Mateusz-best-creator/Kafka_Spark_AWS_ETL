@@ -1,8 +1,5 @@
 from pyspark.sql import functions as F
-from opencage.geocoder import OpenCageGeocode
-from dotenv import load_dotenv
-import os
-from pyspark.sql.types import StructField, StructType, DoubleType, StringType
+from api import GeocoderAPI
 
 def remove_unused_columns(df,
                           columns_to_drop):
@@ -16,35 +13,12 @@ def add_country(df,
     """
     return df.withColumn(country_column_name, F.lit(column_value))
 
-def geocode_udf_func(geocoder,
-                     country_column,
-                     city_column,
-                     geohash_precision=4):
-    """
-    
-    """
-    if country_column is None or city_column is None:
-        return (None, None, None)
-    query = f'{city_column}, {country_column}'
-    query_result = geocoder.geocode(query)[0]
-    return query_result["geometry"]["lat"], query_result["geometry"]["lng"], query_result["annotations"]["geohash"][:geohash_precision]
-
-def get_geocode_udf(geocoder):
-    """
-    
-    """
-    return F.udf(lambda country, location: geocode_udf_func(geocoder, country, location), StructType([StructField("Latitude", DoubleType(), True),
-                                                                                                      StructField("Longitude", DoubleType(), True),
-                                                                                                      StructField("GeoHash", StringType(), True)]))
-
 def longitude_latitude_transformation(df):
     """
     
     """
-    load_dotenv(dotenv_path="../.env")
-    key = os.getenv("GEOCODE_KEY")
-    geocoder = OpenCageGeocode(key)
-    geocode_udf = get_geocode_udf(geocoder)
+    geocoder_api = GeocoderAPI()
+    geocode_udf = geocoder_api.udf_get_lat_lon_hash()
     combined_column_name = "LatLonGeo"
 
     df = df.withColumn(combined_column_name, geocode_udf(F.col("Country"), F.col("Location")))
@@ -54,31 +28,19 @@ def longitude_latitude_transformation(df):
            .drop(F.col(combined_column_name))
     return df
 
-def get_geohash(geocoder,
-                latitude,
-                longitude,
-                geohash_precision=4):
-    """
-    
-    """
-    results = geocoder.reverse_geocode(latitude, longitude)[0]
-    return results["annotations"]["geohash"][:geohash_precision]
-
-def get_geohash_func(geocoder):
-    return F.udf(lambda lat, lon: get_geohash(geocoder, lat, lon), StringType())
-
 def geohash_transformation_from_lat_lon(df):
     """
     
     """
 
-    load_dotenv(dotenv_path="../.env")
-    key = os.getenv("GEOCODE_KEY")
-    geocoder = OpenCageGeocode(key)
-    geohash_udf = get_geohash_func(geocoder)
+    geocoder_api = GeocoderAPI()
+    geohash_udf = geocoder_api.udf_get_hash_from_lat_lon()
     df = df.withColumn("GeoHash", geohash_udf(F.col("latitude"), F.col("longitude")))
 
     return df
+
+def fill_missing_values_with_mode(df):
+    pass
 
 def joining_datasets(weather_df, 
                      traffic_df,
