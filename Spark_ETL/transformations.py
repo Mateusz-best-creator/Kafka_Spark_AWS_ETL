@@ -39,13 +39,24 @@ def geohash_transformation_from_lat_lon(df):
 
     return df
 
-def fill_missing_values_with_mode(df):
-    pass
+def fill_missing_values(df,
+                        col_fill_mapping={"vehicle_speed (km/h)": "avg",
+                                          "traffic_pattern": "mode",
+                                          "incident_report": "mode",
+                                          "event_type": "mode"}):
+    for column_name, method in col_fill_mapping.items():
+        if method == "avg":
+            mean_value = df.select(F.mean(column_name)).collect()[0][0]
+            df = df.na.fill(mean_value, subset=[column_name])
+        elif method == "mode":
+            mode_value = df.select(F.mode(column_name)).collect()[0][0]
+            df = df.na.fill(mode_value, subset=[column_name])
+    return df
 
 def joining_datasets(weather_df, 
                      traffic_df,
                      key_for_join="GeoHash",
-                     join_type="left"):
+                     join_type="inner"):
     return traffic_df.join(other=weather_df,
                            on=key_for_join, 
                            how=join_type)

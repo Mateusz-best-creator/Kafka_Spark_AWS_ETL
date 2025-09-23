@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from data import DatasetLoader
 from transformations import add_country, longitude_latitude_transformation, \
     geohash_transformation_from_lat_lon, joining_datasets, remove_unused_columns, fill_missing_values
+from encryption import PIIEncryption
 
 class ETL:
 
@@ -32,6 +33,7 @@ class ETL:
                                                path=f"s3a://{self.bucket_name}/{self.weather_filename}")
         self.public_traffic_data = DatasetLoader.read(spark=self.spark,
                                                       path=f"s3a://{self.bucket_name}/{self.public_traffic_filename}")
+        print(f"Datasets lengths: \nWeather = {self.weather_data.count()}\nPublic traffic = {self.public_traffic_data.count()}")
 
     def transform(self):
 
@@ -45,10 +47,13 @@ class ETL:
         self.public_traffic_data = fill_missing_values(self.public_traffic_data)
         self.joined_data = joining_datasets(self.weather_data, self.public_traffic_data)
 
+        # PII_encryption = PIIEncryption()
+        # self.joined_data = PII_encryption.encrypt_text(self.joined_data)
+
         print(f"\n\nDatasets after transformations:\n\n")
         self.weather_data.show(10)
         self.public_traffic_data.show(10)
-        print(f"\n\nJoined dataset after transformations:\n\n")
+        print(f"\n\nJoined dataset after transformations and encryption:\n\n")
         self.joined_data.show(20)
 
     def load(self):

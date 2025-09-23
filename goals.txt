@@ -1,0 +1,3 @@
+refactor transformations to use api class
+code encoding for PII
+write unit tests for remaining functions
