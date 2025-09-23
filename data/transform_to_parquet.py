@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-import numpy as np
 
 input_folder = "./initial_format/"
 output_folder = "./parquet_format/"

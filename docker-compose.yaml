@@ -1,0 +1,12 @@
+services:
+  data_preparation:
+    build: 
+      context: ./data/
+    volumes:
+      - ./data/initial_format:/app/initial_format
+      - ./data/parquet_format:/app/parquet_format
+    environment:
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+      BUCKET_NAME: ${BUCKET_NAME}
+    restart: 'no'
