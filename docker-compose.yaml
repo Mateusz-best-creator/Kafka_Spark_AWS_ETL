@@ -10,3 +10,28 @@ services:
       SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
       BUCKET_NAME: ${BUCKET_NAME}
     restart: 'no'
+  tests:
+    build:
+      context: ./Spark_ETL/
+    environment:
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+      BUCKET_NAME: ${BUCKET_NAME}
+      GEOCODE_KEY: ${GEOCODE_KEY}
+      ENCYPTION_KEY: ${ENCYPTION_KEY}
+    restart: "no"
+    depends_on:
+      data_preparation:
+        condition: service_completed_successfully
+  app:
+    build:
+      context: ./Spark_ETL/
+    environment:
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+      BUCKET_NAME: ${BUCKET_NAME}
+      GEOCODE_KEY: ${GEOCODE_KEY}
+      ENCYPTION_KEY: ${ENCYPTION_KEY}
+    depends_on:
+      tests:
+        condition: service_completed_succesfully
