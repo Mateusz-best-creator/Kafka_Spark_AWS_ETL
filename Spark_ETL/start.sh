@@ -7,16 +7,16 @@ HADOOP_AWS_URL="https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HA
 AWS_SDK_URL="https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_VERSION}/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar"
 
 # Download jars if they don't exist
-if [ ! -f ./hadoop-aws-${HADOOP_AWS_VERSION}.jar ]; then
+if [ ! -f ./jar_files/hadoop-aws-${HADOOP_AWS_VERSION}.jar ]; then
     echo "Downloading hadoop-aws..."
     curl -L -o hadoop-aws-${HADOOP_AWS_VERSION}.jar $HADOOP_AWS_URL
 fi
 
-if [ ! -f ./aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar ]; then
+if [ ! -f ./jar_files/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar ]; then
     echo "Downloading aws-java-sdk-bundle..."
     curl -L -o aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar $AWS_SDK_URL
 fi
 
 # Run Spark with local jars
 echo "Starting Spark application..."
-time spark-submit --jars ./hadoop-aws-${HADOOP_AWS_VERSION}.jar,./aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar main.py
+time spark-submit --jars ./jar_files/hadoop-aws-${HADOOP_AWS_VERSION}.jar,./jar_files/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar ./app/main.py
