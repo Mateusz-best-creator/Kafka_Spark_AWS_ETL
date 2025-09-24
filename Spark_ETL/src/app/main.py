@@ -3,8 +3,9 @@ import os
 from dotenv import load_dotenv
 from data import DatasetLoader
 from transformations import add_country, longitude_latitude_transformation, \
-    geohash_transformation_from_lat_lon, joining_datasets, remove_unused_columns, fill_missing_values
-from encryption import PIIEncryption
+    geohash_transformation_from_lat_lon, joining_datasets, remove_unused_columns, \
+    fill_missing_values, group_weather
+from text_encryption import PIIEncryption
 
 class ETL:
 
@@ -38,18 +39,26 @@ class ETL:
     def transform(self):
 
         self.weather_data = add_country(self.weather_data)
+        self.weather_data.show()
         self.weather_data = longitude_latitude_transformation(self.weather_data)
+        self.weather_data.show()
         self.public_traffic_data = geohash_transformation_from_lat_lon(self.public_traffic_data)
         self.public_traffic_data = remove_unused_columns(self.public_traffic_data, columns_to_drop=["sensor_id", 
                                                                                                     "latitude", 
                                                                                                     "longitude", 
                                                                                                     "accident_hotspot"])
+        self.public_traffic_data.show()
         self.public_traffic_data = fill_missing_values(self.public_traffic_data)
+        self.weather_data = group_weather(self.weather_data)
         self.joined_data = joining_datasets(self.weather_data, self.public_traffic_data)
-
-        # PII_encryption = PIIEncryption()
-        # self.joined_data = PII_encryption.encrypt_text(self.joined_data)
-
+        print("\n\n\nHALLOOOOOO\n\n")
+        self.weather_data.show()
+        self.public_traffic_data.show()
+        PII_encryption = PIIEncryption()
+        self.weather_data = PII_encryption.encrypt_columns(self.weather_data,
+                                                          columns=["City",
+                                                                   "Latitude",
+                                                                   "Longitude"])
         print(f"\n\nDatasets after transformations:\n\n")
         self.weather_data.show(10)
         self.public_traffic_data.show(10)
@@ -67,7 +76,7 @@ class ETL:
 
 if __name__ == "__main__":
 
-    load_dotenv(dotenv_path="../.env")
+    load_dotenv(dotenv_path="../../../.env")
     AWS_ACCESS_KEY = os.getenv("ACCESS_KEY")
     AWS_SECRET_KEY = os.getenv("SECRET_ACCESS_KEY")
     BUCKET_NAME = os.getenv("BUCKET_NAME")

@@ -5,7 +5,6 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 from pyspark.sql import DataFrame
 from typing import List
-from pyspark.sql.udf import UserDefinedFunction
 
 class PIIEncryption:
     """
@@ -32,38 +31,34 @@ class PIIEncryption:
     """
 
     def __init__(self):
-        load_dotenv(dotenv_path="../.env")
-        self.key = os.getenv("ENCYPTION_KEY")
+        load_dotenv(dotenv_path="../../../.env")
+        self.key = os.getenv("ENCRYPTION_KEY")
         self.cipher_suite = Fernet(self.key)
 
-    def encrypt_text(self,
-                     plain_text: str) -> str | None:
+    def encrypt(self,
+                plain_text):
         if plain_text is None:
             return None
         return self.cipher_suite.encrypt(plain_text.encode()).decode()
-
-    def decrypt_text(self,
-                     encrypted_text: str) -> str | None:
-        if encrypted_text is None:
-            return None
-        return self.cipher_suite.decrypt(encrypted_text.encode()).decode()
-    
-    def udf_encrypt(self) -> UserDefinedFunction:
-        return udf(self.encrypt_text, StringType())
-    
-    def udf_decrypt(self) -> UserDefinedFunction:
-        return udf(self.decrypt_text, StringType())
     
     def encrypt_columns(self,
                         df: DataFrame,
                         columns: List[str]) -> DataFrame:
+        encrypt_udf = udf(self.encrypt, StringType())
         for column_name in columns:
-            df = df.withColumn(column_name, self.udf_encrypt(column_name))
+            df = df.withColumn(column_name, encrypt_udf(column_name))
         return df
+
+    def decrypt(self,
+                encrypted_text: str) -> str | None:
+        if encrypted_text is None:
+            return None
+        return self.cipher_suite.decrypt(encrypted_text.encode()).decode()
     
     def decrypt_columns(self,
                         df: DataFrame,
                         columns: List[str]) -> DataFrame:
+        decrypt_udf = udf(self.decrypt, StringType())
         for column_name in columns:
-            df = df.withColumn(column_name, self.udf_decrypt(column_name))
+            df = df.withColumn(column_name, decrypt_udf(column_name))
         return df

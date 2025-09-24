@@ -45,4 +45,8 @@ COPY requirements.txt /opt/
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY *.py /opt/
+COPY app/start_app.sh /opt
+RUN chmod a+x /opt/start_app.sh
+
+COPY app/*.py /opt/app
+COPY test/*.py /opt/test

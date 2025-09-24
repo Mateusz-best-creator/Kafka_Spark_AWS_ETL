@@ -18,7 +18,7 @@ class GeocoderAPI:
 
         Loads the environment variable `GEOCODE_KEY` and sets a default geohash precision.
         """
-        load_dotenv(dotenv_path="../.env")
+        load_dotenv(dotenv_path="../../../.env")
         key = os.getenv("GEOCODE_KEY")
         self.geocoder = OpenCageGeocode(key)
         self.geohash_precision = 4
