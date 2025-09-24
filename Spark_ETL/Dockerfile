@@ -46,9 +46,18 @@ COPY requirements.txt /opt/
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY app/start_app.sh /opt/app
-RUN chmod a+x /opt/app/start_app.sh
-RUN mkdir /opt/test
+RUN mkdir /opt/app/jar_files
+COPY ./jar_files/*.jar /opt/app/jar_files
 
-COPY app/*.py /opt/app/
-COPY test/*.py /opt/test/
+RUN mkdir /opt/data
+RUN mkdir /opt/data/initial_format
+RUN mkdir /opt/data/parquet_format
+
+COPY src/app/start_app_within_container.sh /opt/app
+RUN mkdir /opt/test
+RUN chmod a+x /opt/app/start_app_within_container.sh
+
+COPY src/app/*.py /opt/app/
+COPY src/test/*.py /opt/test/
+
+WORKDIR /opt/app

@@ -21,25 +21,30 @@ services:
         condition: service_completed_successfully
   tests:
     build:
-      context: ./Spark_ETL/src/
+      context: ./Spark_ETL/
     environment:
       GEOCODE_KEY: ${GEOCODE_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      PYARROW_IGNORE_TIMEZONE: 1
     depends_on:
       data_preparation:
         condition: service_completed_successfully
-    command: spark-submit /opt/test/test.py
-  # app:
-  #   build:
-  #     context: ./Spark_ETL/
-  #   restart: on-failure:3
-  #   environment:
-  #     ACCESS_KEY: ${ACCESS_KEY}
-  #     SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
-  #     BUCKET_NAME: ${BUCKET_NAME}
-  #     GEOCODE_KEY: ${GEOCODE_KEY}
-  #     ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-  #   depends_on:
-  #     tests:
-  #       condition: service_completed_succesfully
-  #   command: ./start_app.sh
+    command: spark-submit ../test/test.py
+  app:
+    build:
+      context: ./Spark_ETL/
+    volumes:
+      - ./Spark_ETL/jar_files:/opt/jar_files
+      - ./data/initial_format:/opt/data/initial_format
+      - ./data/parquet_format:/opt/data/parquet_format
+    restart: 'no'
+    environment:
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+      BUCKET_NAME: ${BUCKET_NAME}
+      GEOCODE_KEY: ${GEOCODE_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    depends_on:
+      tests:
+        condition: service_completed_successfully
+    command: ./start_app_within_container.sh
