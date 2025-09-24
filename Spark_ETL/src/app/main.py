@@ -47,9 +47,10 @@ class ETL:
                                                                                                     "latitude", 
                                                                                                     "longitude", 
                                                                                                     "accident_hotspot"])
-        self.public_traffic_data.show()
         self.public_traffic_data = fill_missing_values(self.public_traffic_data)
+        self.public_traffic_data.show()
         self.weather_data = group_weather(self.weather_data)
+        self.weather_data.show()
         self.joined_data = joining_datasets(self.weather_data, self.public_traffic_data)
         print("\n\n\nHALLOOOOOO\n\n")
         self.weather_data.show()

@@ -10,28 +10,36 @@ services:
       SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
       BUCKET_NAME: ${BUCKET_NAME}
     restart: 'no'
-  tests:
+  jar_files_preparation:
     build:
-      context: ./Spark_ETL/
-    environment:
-      ACCESS_KEY: ${ACCESS_KEY}
-      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
-      BUCKET_NAME: ${BUCKET_NAME}
-      GEOCODE_KEY: ${GEOCODE_KEY}
-      ENCYPTION_KEY: ${ENCYPTION_KEY}
-    restart: "no"
+      context: ./Spark_ETL/jar_files/
+    volumes:
+      - ./Spark_ETL/jar_files:/app/jar_files
+    restart: 'no'
     depends_on:
       data_preparation:
         condition: service_completed_successfully
-  app:
+  tests:
     build:
-      context: ./Spark_ETL/
+      context: ./Spark_ETL/src/
     environment:
-      ACCESS_KEY: ${ACCESS_KEY}
-      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
-      BUCKET_NAME: ${BUCKET_NAME}
       GEOCODE_KEY: ${GEOCODE_KEY}
-      ENCYPTION_KEY: ${ENCYPTION_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     depends_on:
-      tests:
-        condition: service_completed_succesfully
+      data_preparation:
+        condition: service_completed_successfully
+    command: spark-submit /opt/test/test.py
+  # app:
+  #   build:
+  #     context: ./Spark_ETL/
+  #   restart: on-failure:3
+  #   environment:
+  #     ACCESS_KEY: ${ACCESS_KEY}
+  #     SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+  #     BUCKET_NAME: ${BUCKET_NAME}
+  #     GEOCODE_KEY: ${GEOCODE_KEY}
+  #     ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  #   depends_on:
+  #     tests:
+  #       condition: service_completed_succesfully
+  #   command: ./start_app.sh

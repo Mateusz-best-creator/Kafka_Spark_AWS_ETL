@@ -40,13 +40,15 @@ RUN wget -O /tmp/hadoop-${HADOOP_VERSION}.tar.gz \
 # Set Spark classpath
 ENV SPARK_DIST_CLASSPATH="$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/yarn:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/tools/lib/*"
 
+RUN mkdir /opt/app
 COPY requirements.txt /opt/
 
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY app/start_app.sh /opt
-RUN chmod a+x /opt/start_app.sh
+COPY app/start_app.sh /opt/app
+RUN chmod a+x /opt/app/start_app.sh
+RUN mkdir /opt/test
 
-COPY app/*.py /opt/app
-COPY test/*.py /opt/test
+COPY app/*.py /opt/app/
+COPY test/*.py /opt/test/
