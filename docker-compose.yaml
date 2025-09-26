@@ -1,7 +1,8 @@
 services:
   data_preparation:
-    build: 
-      context: ./data/
+    # build: 
+      # context: ./data/
+    image: ${IMAGE_REGISTRY}.dkr.ecr.${REGION}.amazonaws.com/data_preparation
     volumes:
       - ./data/initial_format:/app/initial_format
       - ./data/parquet_format:/app/parquet_format
@@ -11,8 +12,9 @@ services:
       BUCKET_NAME: ${BUCKET_NAME}
     restart: 'no'
   jar_files_preparation:
-    build:
-      context: ./Spark_ETL/jar_files/
+    # build:
+      # context: ./Spark_ETL/jar_files/
+    image: ${IMAGE_REGISTRY}.dkr.ecr.${REGION}.amazonaws.com/jar_files_preparation
     volumes:
       - ./Spark_ETL/jar_files:/app/jar_files
     restart: 'no'
@@ -20,8 +22,9 @@ services:
       data_preparation:
         condition: service_completed_successfully
   tests:
-    build:
-      context: ./Spark_ETL/
+    # build:
+      # context: ./Spark_ETL/
+    image: ${IMAGE_REGISTRY}.dkr.ecr.${REGION}.amazonaws.com/tests
     environment:
       GEOCODE_KEY: ${GEOCODE_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
@@ -31,8 +34,9 @@ services:
         condition: service_completed_successfully
     command: spark-submit ../test/test.py
   app:
-    build:
-      context: ./Spark_ETL/
+    # build:
+      # context: ./Spark_ETL/
+    image: ${IMAGE_REGISTRY}.dkr.ecr.${REGION}.amazonaws.com/app
     volumes:
       - ./Spark_ETL/jar_files:/opt/jar_files
       - ./data/initial_format:/opt/data/initial_format
