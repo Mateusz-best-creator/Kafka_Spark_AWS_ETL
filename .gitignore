@@ -1,3 +1,4 @@
 *.env
 *.jar
 */__pycache__
+*temp.py
