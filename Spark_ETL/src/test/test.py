@@ -8,6 +8,8 @@ from pyspark.testing.utils import assertDataFrameEqual, assertSchemaEqual # type
 from transformations import remove_unused_columns, add_country # type: ignore
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, IntegralType
 import random
+from api import GeocoderAPI # type: ignore
+from pyspark.sql.functions import col
 
 class PySparkTestCase(unittest.TestCase):
     @classmethod
@@ -55,6 +57,81 @@ class TestTranformation(PySparkTestCase):
 
         self.assertEqual(o_df.schema, e_df.schema)
         self.assertEqual(sorted(o_df.collect()), sorted(e_df.collect()))
+
+    def test_GeocoderAPI_lat_lng_hash(self):
+        geocoder = GeocoderAPI()
+
+        lat_1, lng_1, hash1 = geocoder.get_latitude_longitude_geohash_from_country_city("Germany", "Berlin")
+        lat_2, lng_2, hash2 = geocoder.get_latitude_longitude_geohash_from_country_city("USA", "Chicago")
+
+        expected_data = [(52.5173885, 13.3951309, "u33"),
+                         (41.8755616, -87.6244212, "dp3")]
+        self.assertEqual(lat_1, expected_data[0][0])
+        self.assertEqual(lng_1, expected_data[0][1])
+        self.assertEqual(hash1, expected_data[0][2])
+
+        self.assertEqual(lat_2, expected_data[1][0])
+        self.assertEqual(lng_2, expected_data[1][1])
+        self.assertEqual(hash2, expected_data[1][2])
+
+    def test_GeocoderAPI_hash_from_lat_lng(self):
+        geocoder = GeocoderAPI()
+
+        lat1, lng2 = 41.8303087, -0.1761911
+        hash1 = geocoder.get_geohash_from_latitude_longitude(lat1, lng2)
+        lat2, lng2 = 70.6203087, 10.9761911
+        hash2 = geocoder.get_geohash_from_latitude_longitude(lat2, lng2)
+        lat3, lng3 = 30.6203087, 20.9761911
+        hash3 = geocoder.get_geohash_from_latitude_longitude(lat3, lng3)
+        
+        expected_values = ["ezr", "uhx", "smp"]
+        self.assertEqual(hash1, expected_values[0])
+        self.assertEqual(hash2, expected_values[1])
+        self.assertEqual(hash3, expected_values[2])
+
+        for h in (hash1, hash2, hash3):
+            self.assertEqual(3, len(h))
+
+    def test_udfs(self):
+
+        geocoder = GeocoderAPI()
+        data = [("Germany", "Berlin"),
+                ("USA", "Chicago")]
+        schema = StructType([StructField("Country", StringType(), True),
+                             StructField("City", StringType(), True)])
+        df = self.spark.createDataFrame(data, schema)
+        original_data = df.withColumn("LatLonHash", geocoder.udf_get_lat_lon_hash()(col("City"), col("Country")))
+        result = original_data.collect()
+        original_result = []
+        for row in result:
+            original_result.append((row["LatLonHash"].Latitude, row["LatLonHash"].Longitude, row["LatLonHash"].GeoHash))
+
+        for index, record in enumerate(original_result):
+            if index == 0:
+                self.assertEqual(record[0], 52.5173885)
+                self.assertEqual(record[1], 13.3951309)
+                self.assertEqual(record[2], "u33")
+            else:
+                self.assertEqual(record[0], 41.8755616)
+                self.assertEqual(record[1], -87.6244212)
+                self.assertEqual(record[2], "dp3")
+
+        data = [(41.8303087, -0.1761911),
+                (70.6203087, 10.9761911)]
+        schema = StructType([StructField("Latitude", DoubleType(), True),
+                             StructField("Longitude", DoubleType(), True)])
+        df = self.spark.createDataFrame(data, schema)
+        original_data = df.withColumn("GeoHash", geocoder.udf_get_hash_from_lat_lon()(col("Latitude"), col("Longitude")))
+        for index, record in enumerate(original_data.collect()):
+            if index == 0:
+                self.assertEqual("ezr", record.GeoHash)
+            if index == 1:
+                self.assertEqual("uhx", record.GeoHash)
+
+
+
+    def test_longitude_latitude_transformation(self):
+        pass
 
 
 

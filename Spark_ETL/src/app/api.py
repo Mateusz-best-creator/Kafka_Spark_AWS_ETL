@@ -21,7 +21,7 @@ class GeocoderAPI:
         load_dotenv(dotenv_path="../../../.env")
         key = os.getenv("GEOCODE_KEY")
         self.geocoder = OpenCageGeocode(key)
-        self.geohash_precision = 4
+        self.geohash_precision = 3
 
     def get_latitude_longitude_geohash_from_country_city(self,
                                                          country: str,
