@@ -1,0 +1,30 @@
+networks:
+  kafka-net:
+    driver: bridge
+
+services:
+  kafka-cluster:
+    image: lensesio/fast-data-dev:3.9
+    container_name: kafka-cluster
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      ADV_HOST: kafka-cluster
+    networks:
+      - kafka-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-cluster-ui
+    ports:
+      - "7000:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-cluster:9092
+    depends_on:
+      - kafka-cluster
+    networks:
+      - kafka-net
